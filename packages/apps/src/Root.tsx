@@ -4,6 +4,7 @@
 import type { ThemeDef } from '@polkadot/react-components/types';
 import type { KeyringStore } from '@polkadot/ui-keyring/types';
 
+import * as Sentry from '@sentry/react';
 import React, { Suspense, useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
@@ -37,6 +38,17 @@ function createTheme ({ uiTheme }: { uiTheme: string }): ThemeDef {
 function Root ({ isElectron, store }: Props): React.ReactElement<Props> {
   const [theme, setTheme] = useState(() => createTheme(settings));
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  const transaction = Sentry.startTransaction({ name: 'test-transaction' });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  const span = transaction.startChild({ op: 'functionX' }); // This function returns a Span
+
+  // functionCallX
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  span.finish(); // Remember that only finished spans will be sent with the transaction
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+  transaction.finish(); // Finishing the transaction will send it to Sentry
+
   useEffect((): void => {
     settings.on('change', (settings) => setTheme(createTheme(settings)));
   }, []);
@@ -68,4 +80,7 @@ function Root ({ isElectron, store }: Props): React.ReactElement<Props> {
   );
 }
 
-export default React.memo(Root);
+// export default React.memo(Root);
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+export default Sentry.withProfiler(React.memo(Root));
