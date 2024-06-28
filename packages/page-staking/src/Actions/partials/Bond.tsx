@@ -192,7 +192,7 @@ function Bond ({ className = '', isNominating, isValidating, minNominated, minNo
           <article style={{ margin: '0.5rem 0 0.5rem 2.25rem', padding: '1rem' }}>
             For more information please see the
             <a
-              href='https://xxnetwork.wiki/index.php/How_to_Nominate'
+              href='https://learn.xx.network/tools/webWallet/staking/nominate'
               rel='noopener noreferrer'
               target='_blank'
             >{t<string>('Nomination Wiki')}</a>

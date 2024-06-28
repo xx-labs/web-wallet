@@ -89,11 +89,11 @@ function Step3 ({ className = '', onFinish, standardMnemonic }: Props): React.Re
           {t<string>('To setup a hardware wallet: ')}
           <a
             className='ml-1'
-            href='https://xxnetwork.wiki/Ledger'
+            href='https://learn.xx.network/tools/webWallet/accounts/ledger'
             rel='noreferrer'
             target='_blank'
           >
-            https://xxnetwork.wiki/Ledger
+            https://learn.xx.network/tools/webWallet/accounts/ledger
           </a>
         </p>
       </div>

@@ -175,7 +175,7 @@ const Footer = () => {
           <FlexContainer>
             <Socials
               socials={{
-                discord: 'Y8pCkbK',
+                discord: 'https://discord.xx.network',
                 github: 'xx-labs',
                 telegram: 'xxnetwork',
                 twitter: 'xx_network'

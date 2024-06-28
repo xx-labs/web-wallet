@@ -241,7 +241,7 @@ function ClaimsApp ({ basePath }: Props): React.ReactElement<Props> {
               </h1>
               <div style={{ margin: 'auto 0 0', textAlign: 'end' }}>
                 <a
-                  href='https://xxnetwork.wiki/index.php/Claiming_Tokens'
+                  href='https://learn.xx.network/tools/webWallet/accounts/claim'
                   rel='noopener noreferrer'
                   target='_blank'
                 >
