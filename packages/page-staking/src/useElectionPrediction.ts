@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 
 import { createNamedHook, useApi, useCall } from '@polkadot/react-hooks';
 import { AccountId32 } from '@polkadot/types/interfaces';
-import { PalletElectionProviderMultiPhaseRoundSnapshot, PalletStakingNominations, PalletStakingSlashingSlashingSpans, PalletStakingStakingLedger, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
+import { PalletElectionProviderMultiPhaseRoundSnapshot, PalletStakingNominations, PalletStakingStakingLedger, PalletStakingValidatorPrefs } from '@polkadot/types/lookup';
 import { BN } from '@polkadot/util';
 
 import { seqPhragmen, Voter } from './phragmen';
@@ -21,7 +21,6 @@ interface ChainData {
   ledgers: Record<string, PalletStakingStakingLedger>;
   validators: Record<string, PalletStakingValidatorPrefs>;
   nominators: Record<string, PalletStakingNominations>;
-  lastNonZeroSlashes: Record<string, number>;
 }
 
 function buildVotersListFromSnapshot (snapshot: PalletElectionProviderMultiPhaseRoundSnapshot): Voter[] {
@@ -66,26 +65,14 @@ function buildVotersListFromChain (chainData: ChainData, ownNominators: StakerSt
     // Get targets
     const noms = chainData.nominators[nomId];
     let targets = noms.targets.map((target) => target.toString());
-    const submittedIn = noms.submittedIn.toNumber();
 
     // Replace targets if one of our own nominators
     if (nomId in ourTargets) {
       targets = ourTargets[nomId];
     }
 
-    // Remove duplicates, non validators and slashed validators needing renomination from targets
-    const filteredTargets = uniq(targets.filter((target) => {
-      // If not a validator return right away
-      if (!(target in chainData.validators)) {
-        return false;
-      }
-
-      // Get last slashed era for this target
-      const slashEra = chainData.lastNonZeroSlashes[target] || 0;
-
-      // Check if nominations were submitted after the slash
-      return submittedIn >= slashEra;
-    }));
+    // Remove duplicates and non validators from targets
+    const filteredTargets = uniq(targets.filter((target) => target in chainData.validators));
     const ledger = chainData.ledgers[chainData.controllers[nomId]];
 
     if (filteredTargets.length > 0) {
@@ -120,7 +107,6 @@ function useElectionPredictionImpl (ownNominators: StakerState[] | undefined): E
   const ledger = useCall<[StorageKey<[AccountId32]>, Option<PalletStakingStakingLedger>][]>(api.query.staking.ledger.entries);
   const validators = useCall<[StorageKey<[AccountId32]>, PalletStakingValidatorPrefs][]>(api.query.staking.validators.entries);
   const nominators = useCall<[StorageKey<[AccountId32]>, Option<PalletStakingNominations>][]>(api.query.staking.nominators.entries);
-  const slashes = useCall<[StorageKey<[AccountId32]>, Option<PalletStakingSlashingSlashingSpans>][]>(api.query.staking.slashingSpans.entries);
 
   // Run phragmen (useMemo to run on any changes)
   const electedStakes = useMemo(
@@ -129,7 +115,6 @@ function useElectionPredictionImpl (ownNominators: StakerState[] | undefined): E
       // ChainData
       const data: ChainData = {
         controllers: {},
-        lastNonZeroSlashes: {},
         ledgers: {},
         nominators: {},
         validators: {}
@@ -150,10 +135,6 @@ function useElectionPredictionImpl (ownNominators: StakerState[] | undefined): E
       // Convert all nominators
       nominators?.forEach(([{ args }, nominations]) => {
         data.nominators[args[0].toString()] = nominations.unwrap();
-      });
-      // Convert slashes
-      slashes?.forEach(([{ args }, slashSpans]) => {
-        data.lastNonZeroSlashes[args[0].toString()] = slashSpans.unwrap().lastNonzeroSlash.toNumber();
       });
 
       if (Object.keys(data.controllers).length > 0 && Object.keys(data.ledgers).length > 0 &&
@@ -185,7 +166,6 @@ function useElectionPredictionImpl (ownNominators: StakerState[] | undefined): E
       ledger,
       validators,
       nominators,
-      slashes,
       ownNominators,
       count,
       snapshot
